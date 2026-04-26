@@ -19,8 +19,8 @@ Construir 1 agente de AI por semana desde el 13 de abril de 2026 hasta el 31 de 
 - 1 push a GitHub
 
 ## Progress
-- [X] Agente 01: Convertidor de mensajes de commits a resumen de mis avances diarios
-- [ ] Agente 02: Generador de documentación a partir de un sketch a mano
-- [ ] Agente 03
+- [X] Semana 01 / Agente 01: CLI para convertir commits en resúmenes diarios de avances
+- [X] Semana 02 / Agente 02: MCP Server para explorar PostgreSQL, generar documentación y consultar datos con lenguaje natural
+- [ ] Semana 03 / Agente 03: IN PROGRESS - asistente para priorizar testing unitario, de integración y de carga en Spring Boot
   ...
 - [ ] Agente 38
