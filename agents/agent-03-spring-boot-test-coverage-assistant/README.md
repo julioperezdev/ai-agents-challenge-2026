@@ -10,7 +10,7 @@ El foco del MVP no es “escribir todos los tests automáticamente”, sino:
 - analizar el código de una API Spring Boot,
 - revisar los tests actuales,
 - detectar gaps relevantes,
-- proponer una estrategia mínima y útil de testing.
+- proponer una estrategia mínima y útil de testing con una capa AI opcional.
 
 ## Casos que cubre
 - lógica de negocio sin pruebas unitarias claras,
@@ -43,9 +43,19 @@ Carga mínima sugerida
 ## Estructura
 ```text
 agent-03-spring-boot-test-coverage-assistant/
+├── pom.xml
+├── run.sh
 ├── specification.md
 ├── README.md
 ├── AGENTS.md
+├── src/
+│   ├── main/java/com/aichallenge/agents/testcoverage/
+│   │   ├── application/
+│   │   ├── cli/
+│   │   ├── domain/
+│   │   ├── infrastructure/
+│   │   └── presentation/
+│   └── test/java/com/aichallenge/agents/testcoverage/
 └── skills/
     ├── spring-boot-test-strategy/
     │   └── SKILL.md
@@ -67,18 +77,140 @@ agent-03-spring-boot-test-coverage-assistant/
 - `load-testing`
   Ayuda a proponer smoke/load tests mínimos para endpoints críticos.
 
-## Estado actual
-La carpeta deja preparada la base documental del agente:
-- visión del producto,
-- especificación del MVP,
-- guía interna del agente,
-- skills en formato Agent Skills.
+## Uso
+Desde esta carpeta:
 
-La implementación de código del agente queda como siguiente paso.
+```bash
+./run.sh --project-path ../agent-02-postgres-schema-mcp
+```
+
+Analizar una clase, paquete, feature o módulo específico:
+
+```bash
+./run.sh --project-path ../agent-02-postgres-schema-mcp --target schema
+./run.sh --project-path /ruta/a/mi-api --target UserController
+./run.sh --project-path /ruta/a/mi-api --max-items 12
+./run.sh --project-path /ruta/a/mi-api --target users --ai
+```
+
+Ver ayuda:
+
+```bash
+./run.sh --help
+```
+
+## Modo AI
+El modo local usa heurísticas determinísticas y sirve como inventario rápido.
+
+Para que funcione como agente, usar `--ai`. Ese modo envía el análisis estático a Bedrock y genera un prompt de implementación listo para pegarle a otro agente coding.
+
+La AI recibe:
+- resumen del inventario local,
+- controllers, services y repositories relevantes,
+- recomendaciones candidatas del analizador,
+- snippets acotados de las clases más prioritarias.
+
+Los snippets se limitan por cantidad y tamaño para no enviar el proyecto completo ni saturar el contexto. Sirven para que el modelo proponga tests con métodos, branches, exceptions, queries y asserts más concretos.
+
+El output AI queda orientado a implementación:
+- ruta del proyecto y target,
+- alcance inicial chico,
+- tests concretos a implementar,
+- reglas para no inventar paths, mensajes ni fixtures,
+- comandos de verificación sugeridos,
+- fuera de alcance.
+
+Variables soportadas:
+
+```bash
+export AWS_REGION=us-east-1
+export BEDROCK_MODEL_ID=openai.gpt-oss-20b-1:0
+```
+
+Luego:
+
+```bash
+./run.sh --project-path /ruta/a/mi-api --target tenant --ai
+```
+
+Si no se usa `--ai`, la CLI no invoca ningún modelo y funciona solo como analizador local.
+
+## Costo aproximado del modo AI
+El costo depende de la región, tier de Bedrock, modelo configurado, tamaño del target, snippets enviados y longitud de la respuesta.
+
+Con `openai.gpt-oss-20b-1:0`, el precio público de Bedrock ronda:
+- input: USD 0.07-0.09 por 1M tokens,
+- output: USD 0.30-0.39 por 1M tokens.
+
+Una ejecución típica de este agente suele enviar aproximadamente:
+- input: 5k-12k tokens,
+- output: 700-2k tokens.
+
+Ejemplo estimado:
+
+```text
+input:  10,000 tokens * USD 0.09 / 1,000,000  = USD 0.0009
+output:  1,500 tokens * USD 0.39 / 1,000,000  = USD 0.000585
+
+total aproximado: USD 0.0015 por ejecución
+```
+
+Orden de magnitud:
+- 1 ejecución: USD 0.001-0.003,
+- 100 ejecuciones: USD 0.10-0.30,
+- 1000 ejecuciones: USD 1-3.
+
+El scanner local no tiene costo. Solo se cobra una llamada a Bedrock cuando se usa `--ai`.
+
+Arquitectura:
+- `application` orquesta el análisis y la estrategia.
+- `domain.port.CoverageStrategyAdvisor` define la frontera AI.
+- `infrastructure.ai.BedrockCoverageStrategyAdvisor` implementa la estrategia con Bedrock.
+- `presentation.LocalCoverageStrategyAdvisor` mantiene el fallback local.
+
+La salida de Bedrock se sanitiza antes de imprimirse para eliminar bloques internos como `<reasoning>...</reasoning>`.
+
+Si Bedrock devuelve solo razonamiento interno y ninguna respuesta final visible, la CLI no falla: imprime un aviso y usa el plan local como fallback.
+
+## Qué analiza el MVP
+- Componentes de producción en `src/main/java`.
+- Tests existentes en `src/test/java`.
+- Anotaciones y nombres típicos de Spring Boot:
+  - `@RestController`, `@Controller`
+  - `@Service`
+  - `@Repository`
+  - DTOs `Request`, `Response`, `Dto`, `DTO`
+- Endpoints declarados con `@GetMapping`, `@PostMapping`, `@PutMapping`, `@DeleteMapping`, `@PatchMapping` y `@RequestMapping`.
+- Señales de lógica de negocio, exceptions, validaciones y queries custom.
+- Tests con `JUnit 5`, `Mockito`, `MockMvc`, `@WebMvcTest`, `@SpringBootTest`, `@DataJpaTest` y `Testcontainers`.
+- Generación AI opcional de un prompt de implementación agrupado y menos repetitivo.
+
+## Salida actual
+En modo local, la CLI imprime:
+- resumen de componentes y tests detectados,
+- riesgos principales,
+- unit tests prioritarios,
+- integración prioritaria,
+- carga mínima sugerida,
+- notas para evitar recomendaciones genéricas.
+
+En modo `--ai`, imprime un texto pensado como handoff para un agente implementador.
+
+Por defecto muestra hasta 8 recomendaciones por sección para mantener el plan accionable. Se puede ampliar con `--max-items`.
+
+## Estado actual
+MVP funcional implementado como CLI Java/Maven.
+
+Incluye:
+- análisis estático simple de proyectos Spring Boot locales,
+- modo AI opcional vía Bedrock,
+- recomendaciones priorizadas por riesgo y costo/beneficio,
+- separación pragmática por capas,
+- tests unitarios del scanner, analyzer, planner y renderer.
 
 ## Roadmap
-1. CLI o interfaz inicial para analizar un proyecto Spring Boot local.
-2. Detección de controllers, services, repositories y tests existentes.
-3. Generación de plan priorizado de cobertura.
-4. Soporte futuro para skeletons de tests.
-5. Soporte futuro para recomendaciones de `k6` o `Testcontainers`.
+1. Mejorar parsing de rutas combinando `@RequestMapping` de clase + método.
+2. Generar skeletons opcionales de tests.
+3. Agregar plantillas para `MockMvc`, `@DataJpaTest` y `Testcontainers`.
+4. Exportar el plan a Markdown.
+5. Leer reportes de cobertura existentes como señal secundaria, no como criterio único.
