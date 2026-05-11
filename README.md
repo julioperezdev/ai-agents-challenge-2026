@@ -46,7 +46,8 @@ Los valores son aproximados y pueden cambiar segun el tamano del diff, el largo 
 ## Progress
 - [X] Semana 01 / Agente 01: CLI para convertir commits en resúmenes diarios de avances
 - [X] Semana 02 / Agente 02: MCP Server para explorar PostgreSQL, generar documentación y consultar datos con lenguaje natural
-- [ ] Semana 03 / Agente 03: IN PROGRESS - asistente para priorizar testing unitario, de integración y de carga en Spring Boot
-- [ ] Semana 04 / Agente 04: IN PROGRESS - generador de RFC técnico-funcional desde git diff entre ramas o rangos, con demo en `agents/agent-04-rfc-from-git-diff/RFC_DEMO.md`
+- [X] Semana 03 / Agente 03: asistente para priorizar testing unitario, de integración y de carga en Spring Boot
+- [X] Semana 04 / Agente 04: generador de RFC técnico-funcional desde git diff entre ramas o rangos, con demo en `agents/agent-04-rfc-from-git-diff/RFC_DEMO.md`
+- [ ] Semana 05 / Agente 05: PLANNED - acompañante de voz no médico para personas mayores con recordatorios simples
   ...
 - [ ] Agente 38
