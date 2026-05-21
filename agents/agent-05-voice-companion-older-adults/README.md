@@ -8,40 +8,58 @@ Muchas personas mayores pasan largos periodos sin interaccion social frecuente. 
 El objetivo no es reemplazar familiares, cuidadores ni profesionales de salud. El agente funciona como apoyo cotidiano, compania ligera e inclusion digital.
 
 ## Enfoque
-- Web app minima para iniciar una sesion de voz.
-- CLI para demo local reproducible.
-- Modo local sin credenciales usando conversacion simulada.
-- Modo AI con OpenAI Realtime API.
+- Web app React/Vite para iniciar una sesion de voz.
+- Backend Spring Boot para demo local y negociacion Realtime.
+- Demo local sin credenciales expuesta por API.
+- Modo AI web con OpenAI Realtime API.
 - Recordatorios simples desde JSON.
-- Resumen final en Markdown y JSON.
+- Resumen final en Markdown para la demo local.
 - Limites explicitos: no diagnostico, no recomendaciones clinicas, no emergencias.
 
+## Documentacion tecnica
+
+Para continuar la integracion Realtime, revisar:
+
+- [`docs/realtime-integration.md`](docs/realtime-integration.md): arquitectura backend/frontend, flujo WebRTC, troubleshooting, costos, cuellos de botella y proximas mejoras.
+- [`docs/architecture.md`](docs/architecture.md): estructura general.
+- [`docs/prompt.md`](docs/prompt.md): prompt base y reglas de tono/seguridad.
+- [`docs/safety.md`](docs/safety.md): limites no medicos.
+- [`docs/cost-notes.md`](docs/cost-notes.md): notas de costo.
+
 ## Comando principal
-Demo local sin costo de AI:
+Frontend:
 
 ```bash
-npm run demo:local -- \
-  --input examples/older-adult-profile.example.json \
-  --demo-script examples/demo-script.example.md \
-  --output output/conversation-summary.md
-```
-
-Modo AI:
-
-```bash
-npm run start -- \
-  --input examples/older-adult-profile.example.json \
-  --output output/conversation-summary.md \
-  --ai
-```
-
-Web app:
-
-```bash
+npm install
 npm run dev
 ```
 
-## Modo AI
+Backend Spring Boot:
+
+```bash
+export OPENAI_API_KEY="..."
+export OPENAI_REALTIME_MODEL="gpt-realtime-2"
+export OPENAI_REALTIME_REASONING_EFFORT="low"
+mvn spring-boot:run
+```
+
+Flujo full-stack recomendado:
+
+```bash
+# Terminal 1
+mvn spring-boot:run
+
+# Terminal 2
+npm run dev
+```
+
+Abrir:
+
+```text
+http://localhost:3000
+```
+
+## Modo Realtime
 Proveedor: OpenAI  
 API: Realtime API  
 Modelo por defecto: `gpt-realtime-2`
@@ -52,25 +70,28 @@ Variables esperadas:
 export OPENAI_API_KEY=
 export OPENAI_REALTIME_MODEL=gpt-realtime-2
 export OPENAI_REALTIME_VOICE=marin
+export OPENAI_REALTIME_REASONING_EFFORT=low
 export APP_PORT=3000
 ```
 
-El modo AI debe:
-- validar credenciales antes de iniciar,
-- estimar costo de sesion,
-- pedir confirmacion si la estimacion supera USD 1.00,
-- iniciar sesion realtime,
-- aplicar prompt de personalidad y seguridad,
-- generar resumen al finalizar.
+La sesion Realtime se inicia desde el frontend con `Hablar con IA`. El backend:
 
-## Modo local
-El modo local funciona sin credenciales y usa un guion de demo:
+- recibe el SDP offer en `/api/realtime/session`;
+- arma instrucciones con perfil, recordatorios y reglas de seguridad;
+- llama OpenAI Realtime con `OPENAI_API_KEY`;
+- devuelve el SDP answer al navegador.
+
+## Demo local
+La demo local funciona sin credenciales y usa los ejemplos versionados:
+
+- `examples/older-adult-profile.example.json`
+- `examples/demo-script.example.md`
+
+Endpoints:
 
 ```bash
-npm run demo:local -- \
-  --input examples/older-adult-profile.example.json \
-  --demo-script examples/demo-script.example.md \
-  --output output/conversation-summary.md
+curl http://localhost:8080/api/demo/default
+curl http://localhost:8080/api/health
 ```
 
 Sirve para:
@@ -78,7 +99,7 @@ Sirve para:
 - validar recordatorios,
 - generar resumen,
 - crear una demo reproducible,
-- mostrar el impacto del agente sin costo de AI.
+- mostrar el impacto del agente sin costo de AI desde el frontend o por API.
 
 ## Costos estimados
 Referencia oficial:
@@ -97,7 +118,7 @@ Estimacion inicial:
 - El costo real depende de duracion, turnos conversacionales, audio de entrada, audio de salida y precios vigentes.
 
 Guardrail:
-- Si la estimacion previa supera USD 1.00, la CLI debe pedir confirmacion antes de iniciar la sesion AI.
+- Pendiente: estimar costo antes de iniciar una sesion Realtime larga.
 - Modo local: USD 0.00.
 
 ## Seguridad y limites
@@ -110,18 +131,14 @@ Guardrail:
 - Si se mencionan emergencias, debe recomendar contactar servicios de emergencia o una persona de confianza inmediatamente.
 
 ## Demo
-Demo esperada:
+La web incluye:
 
-```text
-output/conversation-summary.md
-```
+- `Demo local`: conversacion deterministica sin AI.
+- `Hablar con IA`: conversacion Realtime con OpenAI.
+- `Probar micro`: diagnostico de captura local.
+- `Dispositivos`: seleccion de input de audio.
 
-Escenas minimas:
-- conversacion cotidiana;
-- humor o chiste;
-- recordatorio de visita o actividad.
-
-## Estructura prevista
+## Estructura actual
 ```text
 agent-05-voice-companion-older-adults/
 ├── README.md
@@ -132,30 +149,68 @@ agent-05-voice-companion-older-adults/
 ├── .env.example
 ├── examples/
 ├── docs/
+├── frontend/
+│   ├── index.html
+│   ├── main.tsx
+│   └── style.css
 └── src/
-    ├── application/
-    ├── domain/
-    └── infrastructure/
-        ├── input/
-        ├── output/
-        └── ai/
+    ├── main/
+    │   ├── java/
+    │   └── resources/
+    └── test/
+        └── java/
 ```
 
 ## Estado actual
-Base documental inicial creada:
+Primera base funcional full-stack creada:
 - `README.md`
 - `AGENTS.md`
 - `SKILLS.md`
 - `Specification.md`
+- `package.json`
+- `pom.xml`
+- `.env.example`
+- `examples/older-adult-profile.example.json`
+- `examples/demo-script.example.md`
+- `docs/`
+- `src/`
+
+Funciona end-to-end:
+- Backend Spring Boot con `/api/health`, `/api/demo/default` y `/api/demo/local`.
+- Backend Spring Boot con `/api/realtime/session` para negociar WebRTC con OpenAI Realtime sin exponer la API key.
+- Frontend React/Vite/TypeScript que ejecuta la demo desde el backend y permite hablar con OpenAI Realtime.
+- Carga de perfil y recordatorios desde JSON.
+- Lectura de demo script Markdown.
+- Consulta simple de recordatorios.
+- Resumen Markdown.
+- Tests Java para parser, caso de uso, prompt builder y writer.
+
+Pendiente:
+- Persistir resumen de una charla Realtime real.
+- Agregar herramientas/function calling para consultar recordatorios desde el modelo en tiempo real.
+- Estimacion interactiva de costo antes de sesiones AI reales.
+
+## Troubleshooting Realtime
+Si OpenAI responde:
+
+```text
+The model `gpt-realtime` does not exist or you do not have access to it.
+```
+
+probá primero con el modelo recomendado para voice agents:
+
+```bash
+export OPENAI_REALTIME_MODEL="gpt-realtime-2"
+export OPENAI_REALTIME_REASONING_EFFORT="low"
+mvn spring-boot:run
+```
+
+Si tu proyecto todavia no tiene acceso a Realtime 2, el error depende del acceso habilitado en el proyecto/API key.
 
 ## Roadmap
-1. Crear estructura TypeScript/Vite.
-2. Implementar CLI local.
-3. Crear ejemplos JSON y demo script.
-4. Implementar modelos de dominio.
-5. Implementar resumen Markdown/JSON.
-6. Implementar cliente local deterministico.
-7. Integrar OpenAI Realtime API.
-8. Crear web app minima.
-9. Agregar estimador de costos.
-10. Versionar demo final.
+1. Persistir transcript Realtime.
+2. Generar resumen al cortar una llamada real.
+3. Agregar tools/function calling para recordatorios.
+4. Agregar estimador de costos antes de sesiones largas.
+5. Guardar ultimo microfono funcional y fallback automatico.
+6. Mejorar compatibilidad Safari.

@@ -1,0 +1,37 @@
+{
+  "user": {
+    "name": "Roberto Fernandez",
+    "preferredName": "Don Roberto",
+    "language": "es-AR"
+  },
+  "familyContacts": [
+    {
+      "name": "Laura",
+      "relation": "hija",
+      "phone": "+54 9 11 5555-0101"
+    }
+  ],
+  "reminders": [
+    {
+      "id": "reminder-001",
+      "title": "Visita con el medico",
+      "date": "2026-05-15",
+      "time": "16:00",
+      "type": "appointment"
+    },
+    {
+      "id": "reminder-002",
+      "title": "Llamar a Laura",
+      "date": "2026-05-15",
+      "time": "19:00",
+      "type": "family_call"
+    },
+    {
+      "id": "reminder-003",
+      "title": "Reunion del centro de jubilados",
+      "date": "2026-05-16",
+      "time": "10:30",
+      "type": "social"
+    }
+  ]
+}
