@@ -1,2 +1,16 @@
 *.idea
+.idea/
+**/.idea/
 target
+**/target/
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+.env
+**/.env
+__pycache__/
+**/__pycache__/
+*.pyc
+.DS_Store
+**/.DS_Store

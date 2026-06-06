@@ -1,0 +1,35 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: youtube-transcript-api-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-youtube_transcripts}
+      POSTGRES_USER: ${POSTGRES_USER:-youtube_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-youtube_password}
+    ports:
+      - "${POSTGRES_PORT:-55436}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-youtube_user} -d ${POSTGRES_DB:-youtube_transcripts}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - youtube-transcript-postgres-data:/var/lib/postgresql/data
+
+  transcript-service:
+    build:
+      context: ./python-transcript-service
+    container_name: youtube-transcript-api-worker
+    ports:
+      - "${TRANSCRIPT_PROVIDER_PORT:-8006}:${TRANSCRIPT_PROVIDER_PORT:-8006}"
+    environment:
+      PORT: ${TRANSCRIPT_PROVIDER_PORT:-8006}
+      YOUTUBE_TRANSCRIPT_WEBSHARE_USERNAME: ${YOUTUBE_TRANSCRIPT_WEBSHARE_USERNAME:-}
+      YOUTUBE_TRANSCRIPT_WEBSHARE_PASSWORD: ${YOUTUBE_TRANSCRIPT_WEBSHARE_PASSWORD:-}
+      YOUTUBE_TRANSCRIPT_WEBSHARE_LOCATIONS: ${YOUTUBE_TRANSCRIPT_WEBSHARE_LOCATIONS:-}
+      YOUTUBE_TRANSCRIPT_PROXY_HTTP: ${YOUTUBE_TRANSCRIPT_PROXY_HTTP:-}
+      YOUTUBE_TRANSCRIPT_PROXY_HTTPS: ${YOUTUBE_TRANSCRIPT_PROXY_HTTPS:-}
+      YOUTUBE_TRANSCRIPT_PROXY_PRICE_PER_GB_USD: ${YOUTUBE_TRANSCRIPT_PROXY_PRICE_PER_GB_USD:-3.50}
+
+volumes:
+  youtube-transcript-postgres-data:

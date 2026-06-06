@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: youtube-transcript-api
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:55436}/${POSTGRES_DB:youtube_transcripts}
+    username: ${POSTGRES_USER:youtube_user}
+    password: ${POSTGRES_PASSWORD:youtube_password}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+
+app:
+  transcript-provider:
+    port: ${TRANSCRIPT_PROVIDER_PORT:8006}
+    base-url: ${TRANSCRIPT_PROVIDER_BASE_URL:http://localhost:${TRANSCRIPT_PROVIDER_PORT:8006}}
+    connect-timeout: ${TRANSCRIPT_PROVIDER_CONNECT_TIMEOUT:3s}
+    read-timeout: ${TRANSCRIPT_PROVIDER_READ_TIMEOUT:60s}
+  learning-analysis:
+    provider: ${LEARNING_ANALYSIS_PROVIDER:bedrock}
+    fallback-to-local: ${LEARNING_ANALYSIS_FALLBACK_TO_LOCAL:true}
+    bedrock:
+      enabled: ${BEDROCK_ANALYSIS_ENABLED:true}
+      region: ${AWS_REGION:us-east-1}
+      profile: ${BEDROCK_ANALYSIS_PROFILE:}
+      model-id: ${BEDROCK_ANALYSIS_MODEL_ID:${BEDROCK_MODEL_ID:openai.gpt-oss-20b-1:0}}
+      max-tokens: ${BEDROCK_ANALYSIS_MAX_TOKENS:4096}
+      temperature: ${BEDROCK_ANALYSIS_TEMPERATURE:0.2}
+      max-transcript-chars: ${BEDROCK_ANALYSIS_MAX_TRANSCRIPT_CHARS:140000}

@@ -48,6 +48,7 @@ Los valores son aproximados y pueden cambiar segun el tamano del diff, el largo 
 - [X] Semana 02 / Agente 02: MCP Server para explorar PostgreSQL, generar documentación y consultar datos con lenguaje natural
 - [X] Semana 03 / Agente 03: asistente para priorizar testing unitario, de integración y de carga en Spring Boot
 - [X] Semana 04 / Agente 04: generador de RFC técnico-funcional desde git diff entre ramas o rangos, con demo en `agents/agent-04-rfc-from-git-diff/RFC_DEMO.md`
-- [ ] Semana 05 / Agente 05: PLANNED - acompañante de voz no médico para personas mayores con recordatorios simples
+- [X] Semana 05 / Agente 05: acompañante de voz no médico para personas mayores con recordatorios simples
+- [X] Semana 06 / Agente 06: API para obtener, normalizar y persistir transcripciones publicas de YouTube
   ...
 - [ ] Agente 38
